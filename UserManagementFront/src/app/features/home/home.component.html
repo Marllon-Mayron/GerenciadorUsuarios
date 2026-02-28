@@ -1,0 +1,50 @@
+<div class="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    
+    <div class="text-center mb-10">
+      <h1 class="text-2xl font-light text-white tracking-widest">USER MANAGEMENT</h1>
+      <div class="w-12 h-px bg-gray-700 mx-auto mt-4"></div>
+      <p class="text-gray-500 text-xs mt-3 uppercase tracking-wider">Sistema de gerenciamento</p>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 p-8 min-h-[440px] flex flex-col">
+      <div class="flex border-b border-gray-800">
+        <button
+          (click)="setMode(true)"
+          class="flex-1 pb-3 text-sm font-medium transition-colors relative"
+          [class.text-white]="isLoginMode"
+          [class.text-gray-600]="!isLoginMode"
+        >
+          LOGIN
+          @if (isLoginMode) {
+            <div class="absolute bottom-0 left-0 right-0 h-px bg-white"></div>
+          }
+        </button>
+        <button
+          (click)="setMode(false)"
+          class="flex-1 pb-3 text-sm font-medium transition-colors relative"
+          [class.text-white]="!isLoginMode"
+          [class.text-gray-600]="isLoginMode"
+        >
+          CADASTRO
+          @if (!isLoginMode) {
+            <div class="absolute bottom-0 left-0 right-0 h-px bg-white"></div>
+          }
+        </button>
+      </div>
+
+      <div class="flex-1 mt-8">
+        @if (isLoginMode) {
+          <app-login 
+            (switchToRegisterMode)="setMode(false)"
+          ></app-login>
+        } @else {
+          <app-register 
+            (registrationSuccess)="setMode(true)"
+            (switchToLoginMode)="setMode(true)"
+          ></app-register>
+        }
+      </div>
+    </div>
+  </div>
+</div>
