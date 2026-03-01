@@ -102,6 +102,7 @@ export class UserTableComponent {
 
     const currentValues = this.editForm.value;
     const originalStatus = this.selectedUser.status === 'Ativo';
+    const statusValue = currentValues.status === true || currentValues.status === 'true';
     const statusChanged = currentValues.status !== originalStatus;
     const roleChanged = currentValues.role !== this.selectedUser.role;
     const basicInfoChanged =
@@ -125,7 +126,7 @@ export class UserTableComponent {
     if (statusChanged) {
       this.isChangingStatus = true;
       operations.push(
-        this.userService.changeStatus(this.selectedUser.id, currentValues.status).toPromise()
+        this.userService.changeStatus(this.selectedUser.id, statusValue).toPromise()
       );
     }
 

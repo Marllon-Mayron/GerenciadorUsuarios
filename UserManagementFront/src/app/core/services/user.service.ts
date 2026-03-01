@@ -63,7 +63,7 @@ export class UserService {
 
   // Mudar status (ativar/desativar) - apenas admin
   changeStatus(id: string, activate: boolean): Observable<UserDto> {
-    const dto: ChangeStatusDto = { activate };
+    const dto = { Activate: activate };
     return this.http.patch<UserDto>(`${this.apiUrl}/${id}/status`, dto);
   }
 
