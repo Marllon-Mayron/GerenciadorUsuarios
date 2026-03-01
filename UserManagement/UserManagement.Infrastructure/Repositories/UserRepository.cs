@@ -63,5 +63,34 @@ namespace UserManagement.Infrastructure.Repositories
             return await _context.Users
                 .AnyAsync(u => u.Email == email);
         }
+
+        public async Task<(IEnumerable<User> Users, int TotalCount)> GetAllPaginatedAsync(int pageNumber, int pageSize)
+        {
+            try
+            {
+                Console.WriteLine($"UserRepository.GetAllPaginatedAsync - Page: {pageNumber}, Size: {pageSize}");
+
+                var query = _context.Users.AsQueryable();
+
+                var totalCount = await query.CountAsync();
+                Console.WriteLine($"Total de usuários no banco: {totalCount}");
+
+                var users = await query
+                    .OrderBy(u => u.Name) 
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                Console.WriteLine($"Retornando {users.Count} usuários da página {pageNumber}");
+
+                return (users, totalCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO no GetAllPaginatedAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
+        }
     }
 }

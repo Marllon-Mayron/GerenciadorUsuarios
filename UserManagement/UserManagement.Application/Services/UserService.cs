@@ -176,5 +176,28 @@ namespace UserManagement.Application.Services
                 UpdatedAt = user.UpdatedAt
             };
         }
+
+        public async Task<(IEnumerable<UserDto> Users, int TotalCount)> GetAllPaginatedAsync(int pageNumber, int pageSize)
+        {
+            try
+            {
+                Console.WriteLine($"UserService.GetAllPaginatedAsync - Página: {pageNumber}, Tamanho: {pageSize}");
+
+                var (users, totalCount) = await _userRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+
+                Console.WriteLine($"Repository retornou {users.Count()} usuários de {totalCount} total");
+
+                var userDtos = users.Select(MapToDto).ToList();
+
+                return (userDtos, totalCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO no GetAllPaginatedAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
+        }
     }
+
 }

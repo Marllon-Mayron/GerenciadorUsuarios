@@ -14,5 +14,7 @@ namespace UserManagement.Domain.Interfaces
         Task<User> UpdateAsync(User user);
         Task<bool> DeleteAsync(Guid id);
         Task<bool> EmailExistsAsync(string email);
+
+        Task<(IEnumerable<User> Users, int TotalCount)> GetAllPaginatedAsync(int pageNumber, int pageSize);
     }
 }

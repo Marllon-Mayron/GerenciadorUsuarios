@@ -209,5 +209,40 @@ namespace UserManagement.API.Controllers
 
             return Guid.Parse(userIdClaim);
         }
+
+        //PAGinator
+
+        [HttpGet("paginator")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                Console.WriteLine($"Buscando usuários - Página: {pageNumber}, Tamanho: {pageSize}");
+
+                var (users, totalCount) = await _userService.GetAllPaginatedAsync(pageNumber, pageSize);
+
+                Console.WriteLine($"Encontrados {users.Count()} de {totalCount} usuários");
+
+                var response = new
+                {
+                    Items = users,
+                    TotalItems = totalCount,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    HasPreviousPage = pageNumber > 1,
+                    HasNextPage = pageNumber < (int)Math.Ceiling(totalCount / (double)pageSize)
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO no GetAll: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                return StatusCode(500, new { message = "Erro interno ao processar a requisição", details = ex.Message });
+            }
+        }
     }
 }
