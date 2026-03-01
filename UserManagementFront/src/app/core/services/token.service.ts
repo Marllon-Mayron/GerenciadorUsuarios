@@ -1,3 +1,4 @@
+// core/services/token.service.ts
 import { Injectable } from '@angular/core';
 import { UserDto } from '../../shared/models/dtos/user-dto.dto';
 
@@ -24,11 +25,32 @@ export class TokenService {
 
   getUser(): UserDto | null {
     const user = localStorage.getItem(this.USER_KEY);
-    return user ? JSON.parse(user) : null;
+    if (user) {
+      try {
+        return JSON.parse(user);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   clearStorage(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+  }
+
+  // Método útil para verificar se o token existe
+  hasToken(): boolean {
+    return !!this.getToken();
+  }
+
+  // Método para atualizar usuário (útil quando o perfil é editado)
+  updateUser(user: Partial<UserDto>): void {
+    const currentUser = this.getUser();
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...user };
+      this.saveUser(updatedUser);
+    }
   }
 }

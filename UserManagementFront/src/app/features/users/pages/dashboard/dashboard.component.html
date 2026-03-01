@@ -1,0 +1,37 @@
+<div class="min-h-screen bg-gray-950 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-2xl font-light text-white tracking-widest">DASHBOARD</h1>
+        <div class="w-12 h-px bg-gray-700 mt-2"></div>
+        <p class="text-gray-500 text-xs mt-3 uppercase tracking-wider">Gerenciamento de usuários</p>
+      </div>
+
+      <!-- Botão Voltar -->
+      <button
+        (click)="goBack()"
+        class="bg-gray-800 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 transition-colors border border-gray-700"
+      >
+        VOLTAR
+      </button>
+    </div>
+
+    <!-- Card Principal -->
+    <div class="bg-gray-900 border border-gray-800 p-6">
+      @if (isLoading) {
+        <!-- Loading State -->
+        <div class="flex justify-center items-center py-20">
+          <div class="text-gray-400">Carregando usuários...</div>
+        </div>
+      } @else {
+        <!-- Componente da Tabela -->
+        <app-user-table
+          [users]="users"
+          (userUpdated)="onUserUpdated($event)"
+          (userDeleted)="onUserDeleted($event)"
+        />
+      }
+    </div>
+  </div>
+</div>

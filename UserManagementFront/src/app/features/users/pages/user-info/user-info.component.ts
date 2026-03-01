@@ -46,13 +46,13 @@ export class UserInfoComponent implements OnInit {
 
   private loadUserData(): void {
     this.isLoading = true;
-    
+
     try {
       this.userService.getCurrentUser().subscribe({
         next: (user) => {
           this.user = user;
           this.isLoading = false;
-          
+
           // Atualizar form com dados atuais
           this.editForm.patchValue({
             name: user.name,
@@ -62,7 +62,7 @@ export class UserInfoComponent implements OnInit {
         error: (error) => {
           console.error('Erro ao carregar usuário:', error);
           this.isLoading = false;
-          
+
           // Se não conseguir carregar, tenta pegar do token
           this.user = this.tokenService.getUser();
         }
@@ -76,7 +76,7 @@ export class UserInfoComponent implements OnInit {
 
   getUserInitials(): string {
     if (!this.user?.name) return 'U';
-    
+
     const names = this.user.name.split(' ');
     if (names.length >= 2) {
       return (names[0][0] + names[1][0]).toUpperCase();
@@ -87,7 +87,7 @@ export class UserInfoComponent implements OnInit {
   toggleEditMode(): void {
     this.isEditing = !this.isEditing;
     this.editMessage = '';
-    
+
     if (this.isEditing && this.user) {
       this.editForm.patchValue({
         name: this.user.name,
@@ -112,9 +112,9 @@ export class UserInfoComponent implements OnInit {
         this.isSaving = false;
         this.user = updatedUser;
         this.isEditing = false;
-        
+
         // Atualizar dados no token service
-        this.tokenService.saveUser(updatedUser);
+        this.tokenService.updateUser(updatedUser); // Agora usando o método updateUser
       },
       error: (error) => {
         this.isSaving = false;
@@ -129,7 +129,6 @@ export class UserInfoComponent implements OnInit {
   }
 
   viewAllUsers(): void {
-    // Navegar para a lista de usuários (será implementado depois)
-    console.log('Navegar para lista de usuários');
+    this.router.navigate(['/dashboard']);
   }
 }
