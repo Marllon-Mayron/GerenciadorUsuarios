@@ -53,7 +53,7 @@
         </div>
       }
 
-      <!-- Tabela (só mostrado se não estiver loading e não tiver erro) -->
+      <!-- Tabela -->
       @if (!isLoading && !errorMessage) {
         <app-user-table
           [users]="users"
@@ -62,7 +62,7 @@
         />
       }
 
-      <!-- Paginator (só mostra se não estiver loading, não tiver erro e houver itens) -->
+      <!-- Paginator -->
       @if (!isLoading && !errorMessage && totalItems > 0) {
         <app-paginator
           [currentPage]="currentPage"
@@ -88,5 +88,14 @@
         </div>
       }
     </div>
+
+    <!-- GRÁFICOS  -->
+    @if (userService.isAdmin()) {
+      <app-user-charts
+        [statistics]="statistics"
+        [isLoading]="chartsLoading"
+        [errorMessage]="chartsError"
+      />
+    }
   </div>
 </div>

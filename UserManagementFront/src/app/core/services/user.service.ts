@@ -6,6 +6,7 @@ import { TokenService } from './token.service';
 import { ChangeStatusDto } from '../../shared/models/dtos/change-status-dto.dto';
 import { UpdateUserDto } from '../../shared/models/dtos/update-user-dto.dto';
 import { PaginatedResponse } from '../../shared/models/dtos/paginated-response.dto';
+import { StatisticsResponse } from '../../shared/models/dtos/user-statistics.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -86,5 +87,9 @@ export class UserService {
   isAdmin(): boolean {
     const user = this.tokenService.getUser();
     return user?.role === 'Admin';
+  }
+  //Estatisticas para os graficos do dashboard
+  getUserStatistics(): Observable<StatisticsResponse> {
+    return this.http.get<StatisticsResponse>(`${this.apiUrl}/statistics`);
   }
 }

@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UserDto } from '../../../../shared/models/dtos/user-dto.dto';
-import { UpdateUserDto } from '../../../../shared/models/dtos/update-user-dto.dto';
-import { UserService } from '../../../../core/services/user.service';
+import { UserDto } from '../../../../../../shared/models/dtos/user-dto.dto';
+import { UpdateUserDto } from '../../../../../../shared/models/dtos/update-user-dto.dto';
+import { UserService } from '../../../../../../core/services/user.service';
 
 @Component({
   selector: 'app-user-table',

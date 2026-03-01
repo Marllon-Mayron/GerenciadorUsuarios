@@ -1,20 +1,31 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UserTableComponent } from '../../components/user-table/user-table.component';
+import { UserTableComponent } from './components/user-table/user-table.component';
+import { UserDto } from '../../../../shared/models/dtos/user-dto.dto';
+import { UserStatisticsDto } from '../../../../shared/models/dtos/user-statistics.dto';
+import { UserChartsComponent } from './components/user-charts/user-charts.component';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { UserService } from '../../../../core/services/user.service';
-import { UserDto } from '../../../../shared/models/dtos/user-dto.dto';
 import { PaginatedResponse } from '../../../../shared/models/dtos/paginated-response.dto';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, UserTableComponent, PaginatorComponent],
+  imports: [
+    CommonModule,
+    UserTableComponent,
+    PaginatorComponent,
+    UserChartsComponent,
+  ],
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
   users: UserDto[] = [];
+
+  // Propriedades para os gráficos
+  statistics: UserStatisticsDto | null = null;
+  chartsLoading = true;
+  chartsError = '';
 
   // Propriedades de paginação
   currentPage = 1;
@@ -29,13 +40,14 @@ export class DashboardComponent implements OnInit {
   errorMessage = '';
 
   constructor(
-    private userService: UserService,
+    public userService: UserService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadStatistics();
   }
 
   loadUsers(): void {
@@ -63,6 +75,30 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  loadStatistics(): void {
+    if (!this.userService.isAdmin()) {
+      this.chartsLoading = false;
+      return;
+    }
+
+    this.chartsLoading = true;
+    this.chartsError = '';
+
+    this.userService.getUserStatistics().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.statistics = response.data;
+        }
+        this.chartsLoading = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar estatísticas:', error);
+        this.chartsError = 'Erro ao carregar estatísticas';
+        this.chartsLoading = false;
+      }
+    });
+  }
+
   onPageChange(page: number): void {
     this.currentPage = page;
     this.loadUsers();
@@ -79,26 +115,28 @@ export class DashboardComponent implements OnInit {
     if (index !== -1) {
       this.users[index] = updatedUser;
     }
+    this.loadStatistics();
   }
 
   onUserDeleted(deletedUserId: string): void {
+    this.users = this.users.filter(u => u.id !== deletedUserId);
+    this.totalItems--;
 
-  this.users = this.users.filter(u => u.id !== deletedUserId);
-  this.totalItems--;
+    console.log('Usuários atualizados:', this.users.length);
 
-  console.log('Usuários atualizados:', this.users.length);
+    this.cdr.detectChanges();
 
-  this.cdr.detectChanges();
+    if (this.users.length === 0 && this.currentPage > 1) {
+      this.currentPage--;
+      this.loadUsers();
+    } else {
+      this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+      this.hasPreviousPage = this.currentPage > 1;
+      this.hasNextPage = this.currentPage < this.totalPages;
+    }
 
-  if (this.users.length === 0 && this.currentPage > 1) {
-    this.currentPage--;
-    this.loadUsers();
-  } else {
-    this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-    this.hasPreviousPage = this.currentPage > 1;
-    this.hasNextPage = this.currentPage < this.totalPages;
+    this.loadStatistics();
   }
-}
 
   goBack(): void {
     this.router.navigate(['/user-info']);
@@ -106,6 +144,6 @@ export class DashboardComponent implements OnInit {
 
   retryLoading(): void {
     this.loadUsers();
+    this.loadStatistics();
   }
-
 }

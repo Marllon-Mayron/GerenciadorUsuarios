@@ -1,0 +1,98 @@
+<!-- src/app/features/dashboard/components/user-charts/user-charts.component.html -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+  <!-- Card: Status dos Usuários -->
+  <div class="bg-gray-900 border border-gray-800">
+    <div class="p-6 border-b border-gray-800">
+      <h3 class="text-lg font-light text-white tracking-wider">STATUS DOS USUÁRIOS</h3>
+      <div class="w-8 h-px bg-gray-700 mt-2"></div>
+    </div>
+
+    @if (isLoading) {
+      <div class="flex justify-center items-center py-16">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    } @else if (errorMessage) {
+      <div class="text-center py-8 text-red-400">{{ errorMessage }}</div>
+    } @else if (statistics) {
+      <div class="p-6">
+        <!-- Container maior para o gráfico com legendas -->
+        <div style="height: 300px; width: 100%; position: relative;">
+          <ngx-charts-pie-chart
+            [results]="statusChartData"
+            [scheme]="colorScheme"
+            [legend]="showLegend"
+            [labels]="showLabels"
+            [doughnut]="doughnut"
+            [gradient]="gradient"
+            [tooltipText]="tooltipText"
+            [legendTitle]="''"
+            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"
+          >
+          </ngx-charts-pie-chart>
+        </div>
+
+        <!-- Cards de resumo abaixo -->
+        <div class="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-800">
+          <div class="text-center">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Ativos</div>
+            <div class="text-2xl text-white font-light">{{ statistics.statusStats.active }}</div>
+            <div class="text-sm text-emerald-500">{{ statistics.statusStats.activePercentage }}%</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Inativos</div>
+            <div class="text-2xl text-white font-light">{{ statistics.statusStats.inactive }}</div>
+            <div class="text-sm text-gray-500">{{ statistics.statusStats.inactivePercentage }}%</div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Card: Distribuição de Roles -->
+  <div class="bg-gray-900 border border-gray-800">
+    <div class="p-6 border-b border-gray-800">
+      <h3 class="text-lg font-light text-white tracking-wider">DISTRIBUIÇÃO DE ROLES</h3>
+      <div class="w-8 h-px bg-gray-700 mt-2"></div>
+    </div>
+
+    @if (isLoading) {
+      <div class="flex justify-center items-center py-16">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    } @else if (errorMessage) {
+      <div class="text-center py-8 text-red-400">{{ errorMessage }}</div>
+    } @else if (statistics) {
+      <div class="p-6">
+        <!-- Container maior para o gráfico com legendas -->
+        <div style="height: 300px; width: 100%; position: relative;">
+          <ngx-charts-pie-chart
+            [results]="roleChartData"
+            [scheme]="roleColorScheme"
+            [legend]="showLegend"
+            [labels]="showLabels"
+            [doughnut]="doughnut"
+            [gradient]="gradient"
+            [tooltipText]="tooltipText"
+            [legendTitle]="''"
+            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"
+          >
+          </ngx-charts-pie-chart>
+        </div>
+
+        <!-- Cards de resumo abaixo -->
+        <div class="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-800">
+          <div class="text-center">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Administradores</div>
+            <div class="text-2xl text-white font-light">{{ statistics.roleStats.admin }}</div>
+            <div class="text-sm text-blue-500">{{ statistics.roleStats.adminPercentage }}%</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Usuários</div>
+            <div class="text-2xl text-white font-light">{{ statistics.roleStats.user }}</div>
+            <div class="text-sm text-gray-500">{{ statistics.roleStats.userPercentage }}%</div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
