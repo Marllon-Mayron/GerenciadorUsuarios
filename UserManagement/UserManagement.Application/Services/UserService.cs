@@ -198,6 +198,43 @@ namespace UserManagement.Application.Services
                 throw;
             }
         }
+
+        public async Task<UserStatisticsDto> GetUserStatisticsAsync()
+        {
+            try
+            {
+                Console.WriteLine("UserService.GetUserStatisticsAsync - Buscando estatísticas");
+
+                var (active, inactive, admin, user) = await _userRepository.GetUserStatisticsAsync();
+                var total = active + inactive;
+
+                var statistics = new UserStatisticsDto
+                {
+                    StatusStats = new StatusStatisticsDto
+                    {
+                        Active = active,
+                        Inactive = inactive,
+                        ActivePercentage = total > 0 ? Math.Round((active * 100.0 / total), 1) : 0,
+                        InactivePercentage = total > 0 ? Math.Round((inactive * 100.0 / total), 1) : 0
+                    },
+                    RoleStats = new RoleStatisticsDto
+                    {
+                        Admin = admin,
+                        User = user,
+                        AdminPercentage = total > 0 ? Math.Round((admin * 100.0 / total), 1) : 0,
+                        UserPercentage = total > 0 ? Math.Round((user * 100.0 / total), 1) : 0
+                    }
+                };
+
+                Console.WriteLine($"Estatísticas calculadas - Total: {total}");
+                return statistics;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO no GetUserStatisticsAsync: {ex.Message}");
+                throw;
+            }
+        }
     }
 
 }

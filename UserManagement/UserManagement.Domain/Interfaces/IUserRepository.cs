@@ -16,5 +16,7 @@ namespace UserManagement.Domain.Interfaces
         Task<bool> EmailExistsAsync(string email);
 
         Task<(IEnumerable<User> Users, int TotalCount)> GetAllPaginatedAsync(int pageNumber, int pageSize);
+
+        Task<(int Active, int Inactive, int Admin, int User)> GetUserStatisticsAsync();
     }
 }

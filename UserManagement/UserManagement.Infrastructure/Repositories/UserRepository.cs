@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using UserManagement.Domain.Entities;
+using UserManagement.Domain.Enums;
 using UserManagement.Domain.Interfaces;
 using UserManagement.Infrastructure.Data;
 
@@ -89,6 +90,35 @@ namespace UserManagement.Infrastructure.Repositories
             {
                 Console.WriteLine($"ERRO no GetAllPaginatedAsync: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
+        public async Task<(int Active, int Inactive, int Admin, int User)> GetUserStatisticsAsync()
+        {
+            try
+            {
+                Console.WriteLine("Buscando estatísticas de usuários...");
+
+                var active = await _context.Users
+                    .CountAsync(u => u.Status == UserStatus.Ativo);
+
+                var inactive = await _context.Users
+                    .CountAsync(u => u.Status == UserStatus.Inativo);
+
+                var admin = await _context.Users
+                    .CountAsync(u => u.Role == UserRole.Admin);
+
+                var user = await _context.Users
+                    .CountAsync(u => u.Role == UserRole.User);
+
+                Console.WriteLine($"Estatísticas - Ativos: {active}, Inativos: {inactive}, Admins: {admin}, Users: {user}");
+
+                return (active, inactive, admin, user);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO ao buscar estatísticas: {ex.Message}");
                 throw;
             }
         }

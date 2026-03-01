@@ -244,5 +244,37 @@ namespace UserManagement.API.Controllers
                 return StatusCode(500, new { message = "Erro interno ao processar a requisição", details = ex.Message });
             }
         }
+
+        [HttpGet("statistics")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> GetStatistics()
+        {
+            try
+            {
+                Console.WriteLine("GET /api/users/statistics - Requisição recebida");
+
+                var statistics = await _userService.GetUserStatisticsAsync();
+
+                Console.WriteLine("Estatísticas obtidas com sucesso");
+                return Ok(new
+                {
+                    success = true,
+                    data = statistics,
+                    message = "Estatísticas obtidas com sucesso"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO em GetStatistics: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Erro interno ao processar a requisição",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }
