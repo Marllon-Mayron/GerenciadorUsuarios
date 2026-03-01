@@ -22,6 +22,9 @@ export class UserTableComponent {
   editForm!: FormGroup;
   isSaving = false;
   editMessage = '';
+  hasChanges = false;
+  isChangingStatus = false;
+  isChangingRole = false;
 
   // Modal de exclusão
   showDeleteModal = false;
@@ -38,8 +41,32 @@ export class UserTableComponent {
   private initForm(): void {
     this.editForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]]
+      email: ['', [Validators.required, Validators.email]],
+      status: [true],
+      role: ['User']
     });
+
+    // Monitora mudanças no formulário
+    this.editForm.valueChanges.subscribe(() => {
+      this.checkForChanges();
+    });
+  }
+
+  // Verifica se houve alterações em relação ao usuário original
+  private checkForChanges(): void {
+    if (!this.selectedUser) {
+      this.hasChanges = false;
+      return;
+    }
+
+    const currentValues = this.editForm.value;
+    const originalStatus = this.selectedUser.status === 'Ativo';
+
+    this.hasChanges =
+      currentValues.name !== this.selectedUser.name ||
+      currentValues.email !== this.selectedUser.email ||
+      currentValues.status !== originalStatus ||
+      currentValues.role !== this.selectedUser.role;
   }
 
   // Métodos para edição
@@ -47,43 +74,96 @@ export class UserTableComponent {
     this.selectedUser = user;
     this.editForm.patchValue({
       name: user.name,
-      email: user.email
+      email: user.email,
+      status: user.status === 'Ativo',
+      role: user.role
     });
     this.showEditModal = true;
     this.editMessage = '';
+    this.hasChanges = false;
+    this.isChangingStatus = false;
+    this.isChangingRole = false;
   }
 
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedUser = null;
     this.editMessage = '';
+    this.hasChanges = false;
+    this.isChangingStatus = false;
+    this.isChangingRole = false;
   }
 
   updateUser(): void {
-    if (this.editForm.invalid || !this.selectedUser) return;
+    if (this.editForm.invalid || !this.selectedUser || !this.hasChanges) return;
 
     this.isSaving = true;
     this.editMessage = '';
 
-    const updateData: UpdateUserDto = {
-      name: this.editForm.value.name,
-      email: this.editForm.value.email
-    };
+    const currentValues = this.editForm.value;
+    const originalStatus = this.selectedUser.status === 'Ativo';
+    const statusChanged = currentValues.status !== originalStatus;
+    const roleChanged = currentValues.role !== this.selectedUser.role;
+    const basicInfoChanged =
+      currentValues.name !== this.selectedUser.name ||
+      currentValues.email !== this.selectedUser.email;
 
-    this.userService.updateUser(this.selectedUser.id, updateData).subscribe({
-      next: (updatedUser) => {
+    // Array para armazenar as operações
+    const operations: Promise<any>[] = [];
+
+    if (basicInfoChanged) {
+      const updateData: UpdateUserDto = {
+        name: currentValues.name,
+        email: currentValues.email
+      };
+
+      operations.push(
+        this.userService.updateUser(this.selectedUser.id, updateData).toPromise()
+      );
+    }
+
+    if (statusChanged) {
+      this.isChangingStatus = true;
+      operations.push(
+        this.userService.changeStatus(this.selectedUser.id, currentValues.status).toPromise()
+      );
+    }
+
+    if (roleChanged) {
+      this.isChangingRole = true;
+      const roleOperation = currentValues.role === 'Admin'
+        ? this.userService.promoteToAdmin(this.selectedUser.id).toPromise()
+        : this.userService.demoteToUser(this.selectedUser.id).toPromise();
+
+      operations.push(roleOperation);
+    }
+
+    // Executar todas as operações em paralelo
+    Promise.all(operations)
+      .then((results) => {
+        // Pega o último resultado nãonulo (ou o único)
+        const lastResult = results.find(r => r !== null && r !== undefined);
         this.isSaving = false;
+        this.isChangingStatus = false;
+        this.isChangingRole = false;
         this.closeEditModal();
-        this.userUpdated.emit(updatedUser);
-      },
-      error: (error) => {
+        if (lastResult) {
+          this.userUpdated.emit(lastResult as UserDto);
+        } else {
+          // Se não houve resultado (só atualizações de role que não retornam UserDto?), recarrega
+          this.userService.getUserById(this.selectedUser!.id).subscribe(user => {
+            this.userUpdated.emit(user);
+          });
+        }
+      })
+      .catch((error) => {
         this.isSaving = false;
+        this.isChangingStatus = false;
+        this.isChangingRole = false;
         this.editMessage = error.error?.message || 'Erro ao atualizar usuário';
-      }
-    });
+      });
   }
 
-  // Métodos para exclusão
   openDeleteModal(user: UserDto): void {
     this.selectedUser = user;
     this.showDeleteModal = true;
@@ -115,7 +195,6 @@ export class UserTableComponent {
     });
   }
 
-  // Utilitário para iniciais
   getUserInitials(name: string): string {
     if (!name) return 'U';
     const names = name.split(' ');
