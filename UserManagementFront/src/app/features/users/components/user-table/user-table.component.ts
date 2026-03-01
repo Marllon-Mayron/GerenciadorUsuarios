@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UserDto } from '../../../shared/models/dtos/user-dto.dto';
-import { UpdateUserDto } from '../../../shared/models/dtos/update-user-dto.dto';
-import { UserService } from '../../../core/services/user.service';
+import { UserDto } from '../../../../shared/models/dtos/user-dto.dto';
+import { UpdateUserDto } from '../../../../shared/models/dtos/update-user-dto.dto';
+import { UserService } from '../../../../core/services/user.service';
 
 @Component({
   selector: 'app-user-table',
@@ -177,23 +177,39 @@ export class UserTableComponent {
   }
 
   deleteUser(): void {
-    if (!this.selectedUser) return;
-
-    this.isDeleting = true;
-    this.deleteMessage = '';
-
-    this.userService.deleteUser(this.selectedUser.id).subscribe({
-      next: () => {
-        this.isDeleting = false;
-        this.closeDeleteModal();
-        this.userDeleted.emit(this.selectedUser!.id);
-      },
-      error: (error) => {
-        this.isDeleting = false;
-        this.deleteMessage = error.error?.message || 'Erro ao excluir usuário';
-      }
-    });
+  if (!this.selectedUser) {
+    return;
   }
+
+  // Guarda o ID antes de qualquer operação
+  const userIdToDelete = this.selectedUser.id;
+  const userName = this.selectedUser.name;
+
+  console.log('🗑️ Iniciando exclusão do usuário:', {
+    id: userIdToDelete,
+    name: userName
+  });
+
+  this.isDeleting = true;
+  this.deleteMessage = '';
+
+  this.userService.deleteUser(userIdToDelete).subscribe({
+    next: () => {
+
+      this.userDeleted.emit(userIdToDelete);
+
+      this.isDeleting = false;
+      this.deleteMessage = '';
+
+      this.showDeleteModal = false;
+      this.selectedUser = null;
+    },
+    error: (error) => {
+      this.isDeleting = false;
+      this.deleteMessage = error.error?.message || 'Erro ao excluir usuário';
+    }
+  });
+}
 
   getUserInitials(name: string): string {
     if (!name) return 'U';

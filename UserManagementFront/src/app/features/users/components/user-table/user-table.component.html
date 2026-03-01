@@ -184,3 +184,57 @@
     </div>
   </div>
 }
+
+<!-- Modal de Exclusão -->
+@if (showDeleteModal && selectedUser) {
+  <div class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div class="bg-gray-900 border border-gray-800 w-full max-w-md">
+      <div class="p-6">
+        <h3 class="text-lg font-light text-white tracking-wider mb-6">CONFIRMAR EXCLUSÃO</h3>
+
+        <div class="mb-6">
+          <p class="text-gray-300 mb-2">
+            Tem certeza que deseja excluir o usuário:
+          </p>
+          <p class="text-white font-medium">{{ selectedUser.name }}</p>
+          <p class="text-gray-400 text-sm">{{ selectedUser.email }}</p>
+
+          <div class="mt-4 p-3 bg-red-900/20 border border-red-800/50">
+            <p class="text-red-400 text-sm">
+              Esta ação é irreversível. O usuário será permanentemente removido do sistema.
+            </p>
+          </div>
+        </div>
+
+        @if (deleteMessage) {
+          <div class="mb-4 p-3 text-sm border border-gray-700 bg-gray-900 text-gray-300">
+            {{ deleteMessage }}
+          </div>
+        }
+
+        <div class="flex gap-4">
+          <button
+            type="button"
+            (click)="closeDeleteModal()"
+            [disabled]="isDeleting"
+            class="flex-1 bg-gray-800 text-white py-3 px-4 text-sm font-medium hover:bg-gray-700 transition-colors border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            CANCELAR
+          </button>
+          <button
+            type="button"
+            (click)="deleteUser()"
+            [disabled]="isDeleting"
+            class="flex-1 bg-red-600 text-white py-3 px-4 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (isDeleting) {
+              EXCLUINDO...
+            } @else {
+              EXCLUIR
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

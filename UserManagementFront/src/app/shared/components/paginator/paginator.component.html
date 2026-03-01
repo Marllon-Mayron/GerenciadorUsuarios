@@ -1,0 +1,89 @@
+<div class="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 py-3 border-t border-gray-800">
+  <!-- Info de resultados -->
+  <div class="text-sm text-gray-400">
+    Mostrando <span class="font-medium text-white">{{ showingFrom }}</span>
+    a <span class="font-medium text-white">{{ showingTo }}</span>
+    de <span class="font-medium text-white">{{ totalItems }}</span> resultados
+  </div>
+
+  <!-- Controles de paginação -->
+  <div class="flex items-center gap-2">
+    <!-- Select de itens por página -->
+    <select
+      [value]="pageSize"
+      (change)="onPageSizeChange($event)"
+      class="bg-gray-950 border border-gray-800 text-white text-sm rounded-sm px-3 py-2 focus:outline-none focus:border-gray-600"
+    >
+      @for (option of pageSizeOptions; track option) {
+        <option [value]="option" class="bg-gray-950 text-white">
+          {{ option }} por página
+        </option>
+      }
+    </select>
+
+    <!-- Navegação de páginas -->
+    <div class="flex items-center gap-1">
+      <!-- Primeira página -->
+      <button
+        (click)="goToPage(1)"
+        [disabled]="currentPage === 1"
+        class="p-2 bg-gray-950 border border-gray-800 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        title="Primeira página"
+      >
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Página anterior -->
+      <button
+        (click)="goToPage(currentPage - 1)"
+        [disabled]="!hasPreviousPage"
+        class="p-2 bg-gray-950 border border-gray-800 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        title="Página anterior"
+      >
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Números das páginas -->
+      @for (page of pages; track page) {
+        <button
+          (click)="goToPage(page)"
+          [class]="
+            page === currentPage
+              ? 'px-3 py-2 bg-white text-gray-950 text-sm font-medium border border-white'
+              : 'px-3 py-2 bg-gray-950 text-gray-400 text-sm font-medium border border-gray-800 hover:bg-gray-800 hover:text-white transition-colors'
+          "
+        >
+          {{ page }}
+        </button>
+      }
+
+      <!-- Próxima página -->
+      <button
+        (click)="goToPage(currentPage + 1)"
+        [disabled]="!hasNextPage"
+        class="p-2 bg-gray-950 border border-gray-800 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        title="Próxima página"
+      >
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <!-- Última página -->
+      <button
+        (click)="goToPage(totalPages)"
+        [disabled]="currentPage === totalPages"
+        class="p-2 bg-gray-950 border border-gray-800 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        title="Última página"
+      >
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

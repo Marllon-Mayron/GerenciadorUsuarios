@@ -1,6 +1,5 @@
 <div class="min-h-screen bg-gray-950 p-6">
   <div class="max-w-7xl mx-auto">
-    <!-- Header -->
     <div class="flex justify-between items-center mb-8">
       <div>
         <h1 class="text-2xl font-light text-white tracking-widest">DASHBOARD</h1>
@@ -8,7 +7,6 @@
         <p class="text-gray-500 text-xs mt-3 uppercase tracking-wider">Gerenciamento de usuários</p>
       </div>
 
-      <!-- Botão Voltar -->
       <button
         (click)="goBack()"
         class="bg-gray-800 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 transition-colors border border-gray-700"
@@ -17,20 +15,77 @@
       </button>
     </div>
 
-    <!-- Card Principal -->
-    <div class="bg-gray-900 border border-gray-800 p-6">
+    <div class="bg-gray-900 border border-gray-800">
+      <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+        <h2 class="text-xl font-light text-white tracking-wider">USUÁRIOS</h2>
+        @if (!isLoading && totalItems > 0) {
+          <span class="text-sm text-gray-400">
+            Total: {{ totalItems }} usuário{{ totalItems !== 1 ? 's' : '' }}
+          </span>
+        }
+      </div>
+
+      <!-- Loading State -->
       @if (isLoading) {
-        <!-- Loading State -->
         <div class="flex justify-center items-center py-20">
-          <div class="text-gray-400">Carregando usuários...</div>
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-8 h-8 border-2 border-gray-700 border-t-white rounded-full animate-spin"></div>
+            <span class="text-sm text-gray-400">Carregando usuários...</span>
+          </div>
         </div>
-      } @else {
-        <!-- Componente da Tabela -->
+      }
+
+      <!-- Error State -->
+      @if (errorMessage && !isLoading) {
+        <div class="flex flex-col items-center justify-center py-12 px-4">
+          <div class="text-red-400 mb-4">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p class="text-gray-300 text-center mb-4">{{ errorMessage }}</p>
+          <button
+            (click)="retryLoading()"
+            class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium border border-gray-700 transition-colors"
+          >
+            TENTAR NOVAMENTE
+          </button>
+        </div>
+      }
+
+      <!-- Tabela (só mostrado se não estiver loading e não tiver erro) -->
+      @if (!isLoading && !errorMessage) {
         <app-user-table
           [users]="users"
           (userUpdated)="onUserUpdated($event)"
           (userDeleted)="onUserDeleted($event)"
         />
+      }
+
+      <!-- Paginator (só mostra se não estiver loading, não tiver erro e houver itens) -->
+      @if (!isLoading && !errorMessage && totalItems > 0) {
+        <app-paginator
+          [currentPage]="currentPage"
+          [pageSize]="pageSize"
+          [totalItems]="totalItems"
+          [totalPages]="totalPages"
+          [hasPreviousPage]="hasPreviousPage"
+          [hasNextPage]="hasNextPage"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+        ></app-paginator>
+      }
+
+      <!-- Empty State -->
+      @if (!isLoading && !errorMessage && totalItems === 0) {
+        <div class="flex flex-col items-center justify-center py-12 px-4">
+          <div class="text-gray-600 mb-4">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <p class="text-gray-400 text-center">Nenhum usuário encontrado</p>
+        </div>
       }
     </div>
   </div>

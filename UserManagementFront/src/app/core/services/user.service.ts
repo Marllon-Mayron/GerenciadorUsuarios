@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserDto } from '../../shared/models/dtos/user-dto.dto';
 import { TokenService } from './token.service';
 import { ChangeStatusDto } from '../../shared/models/dtos/change-status-dto.dto';
 import { UpdateUserDto } from '../../shared/models/dtos/update-user-dto.dto';
+import { PaginatedResponse } from '../../shared/models/dtos/paginated-response.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,17 @@ export class UserService {
     private tokenService: TokenService
   ) { }
 
-  // Buscar todos os usuários (apenas admin)
+
+  // Buscar todos os usuários com paginação
+  getAllUsersPaginator(pageNumber: number = 1, pageSize: number = 10): Observable<PaginatedResponse<UserDto>> {
+    let params = new HttpParams()
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<PaginatedResponse<UserDto>>(this.apiUrl+'/paginator', { params });
+  }
+
+  // Buscar todos os usuários
   getAllUsers(): Observable<UserDto[]> {
     return this.http.get<UserDto[]>(this.apiUrl);
   }
