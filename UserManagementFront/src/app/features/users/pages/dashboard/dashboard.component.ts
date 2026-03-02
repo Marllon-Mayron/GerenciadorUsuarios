@@ -122,8 +122,6 @@ export class DashboardComponent implements OnInit {
     this.users = this.users.filter(u => u.id !== deletedUserId);
     this.totalItems--;
 
-    console.log('Usuários atualizados:', this.users.length);
-
     this.cdr.detectChanges();
 
     if (this.users.length === 0 && this.currentPage > 1) {

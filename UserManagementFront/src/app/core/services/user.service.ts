@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserDto } from '../../shared/models/dtos/user-dto.dto';
 import { TokenService } from './token.service';
-import { ChangeStatusDto } from '../../shared/models/dtos/change-status-dto.dto';
 import { UpdateUserDto } from '../../shared/models/dtos/update-user-dto.dto';
 import { PaginatedResponse } from '../../shared/models/dtos/paginated-response.dto';
 import { StatisticsResponse } from '../../shared/models/dtos/user-statistics.dto';
@@ -19,6 +18,13 @@ export class UserService {
     private tokenService: TokenService
   ) { }
 
+  private getHeaders(): HttpHeaders {
+    const token = this.tokenService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
 
   // Buscar todos os usuários com paginação
   getAllUsersPaginator(pageNumber: number = 1, pageSize: number = 10): Observable<PaginatedResponse<UserDto>> {
@@ -26,17 +32,24 @@ export class UserService {
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
 
-    return this.http.get<PaginatedResponse<UserDto>>(this.apiUrl+'/paginator', { params });
+    return this.http.get<PaginatedResponse<UserDto>>(this.apiUrl + '/paginator', {
+      params,
+      headers: this.getHeaders()
+    });
   }
 
   // Buscar todos os usuários
   getAllUsers(): Observable<UserDto[]> {
-    return this.http.get<UserDto[]>(this.apiUrl);
+    return this.http.get<UserDto[]>(this.apiUrl, {
+      headers: this.getHeaders()
+    });
   }
 
   // Buscar usuário por ID
   getUserById(id: string): Observable<UserDto> {
-    return this.http.get<UserDto>(`${this.apiUrl}/${id}`);
+    return this.http.get<UserDto>(`${this.apiUrl}/${id}`, {
+      headers: this.getHeaders()
+    });
   }
 
   // Buscar usuário atual (logado)
@@ -50,7 +63,9 @@ export class UserService {
 
   // Atualizar usuário
   updateUser(id: string, userData: UpdateUserDto): Observable<UserDto> {
-    return this.http.put<UserDto>(`${this.apiUrl}/${id}`, userData);
+    return this.http.put<UserDto>(`${this.apiUrl}/${id}`, userData, {
+      headers: this.getHeaders()
+    });
   }
 
   // Atualizar usuário atual
@@ -65,22 +80,30 @@ export class UserService {
   // Mudar status (ativar/desativar) - apenas admin
   changeStatus(id: string, activate: boolean): Observable<UserDto> {
     const dto = { Activate: activate };
-    return this.http.patch<UserDto>(`${this.apiUrl}/${id}/status`, dto);
+    return this.http.patch<UserDto>(`${this.apiUrl}/${id}/status`, dto, {
+      headers: this.getHeaders()
+    });
   }
 
   // Promover a admin - apenas admin
   promoteToAdmin(id: string): Observable<UserDto> {
-    return this.http.post<UserDto>(`${this.apiUrl}/${id}/promote`, {});
+    return this.http.post<UserDto>(`${this.apiUrl}/${id}/promote`, {}, {
+      headers: this.getHeaders()
+    });
   }
 
   // Rebaixar para user - apenas admin
   demoteToUser(id: string): Observable<UserDto> {
-    return this.http.post<UserDto>(`${this.apiUrl}/${id}/demote`, {});
+    return this.http.post<UserDto>(`${this.apiUrl}/${id}/demote`, {}, {
+      headers: this.getHeaders()
+    });
   }
 
   // Deletar usuário - apenas admin
   deleteUser(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      headers: this.getHeaders()
+    });
   }
 
   // Verificar se é admin
@@ -88,8 +111,11 @@ export class UserService {
     const user = this.tokenService.getUser();
     return user?.role === 'Admin';
   }
-  //Estatisticas para os graficos do dashboard
+
+  // Estatisticas para os graficos do dashboard
   getUserStatistics(): Observable<StatisticsResponse> {
-    return this.http.get<StatisticsResponse>(`${this.apiUrl}/statistics`);
+    return this.http.get<StatisticsResponse>(`${this.apiUrl}/statistics`, {
+      headers: this.getHeaders()
+    });
   }
 }

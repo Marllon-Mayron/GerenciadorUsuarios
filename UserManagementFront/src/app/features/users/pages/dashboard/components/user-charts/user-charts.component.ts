@@ -55,8 +55,6 @@ export class UserChartsComponent implements OnChanges {
   private prepareChartData(): void {
     if (!this.statistics) return;
 
-    console.log('Preparando dados:', this.statistics);
-
     this.statusChartData = [
       {
         name: 'Ativos',
@@ -67,7 +65,7 @@ export class UserChartsComponent implements OnChanges {
         value: this.statistics.statusStats.inactive
       }
     ];
-    
+
     this.roleChartData = [
       {
         name: 'Administradores',
@@ -79,7 +77,5 @@ export class UserChartsComponent implements OnChanges {
       }
     ];
 
-    console.log('Status data:', this.statusChartData);
-    console.log('Role data:', this.roleChartData);
   }
 }

@@ -186,11 +186,6 @@ export class UserTableComponent {
   const userIdToDelete = this.selectedUser.id;
   const userName = this.selectedUser.name;
 
-  console.log('🗑️ Iniciando exclusão do usuário:', {
-    id: userIdToDelete,
-    name: userName
-  });
-
   this.isDeleting = true;
   this.deleteMessage = '';
 
