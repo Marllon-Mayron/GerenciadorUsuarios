@@ -8,10 +8,15 @@ using UserManagement.Domain.Interfaces;
 using UserManagement.Infrastructure.Data;
 using UserManagement.Infrastructure.Repositories;
 using UserManagement.Infrastructure.Services;
+using UserManagement.API.Middleware;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configuracao Swagger
@@ -112,6 +117,74 @@ builder.Services.AddCors(options =>
         });
 });
 
+// ==================== CONFIGURAÇÃO DO RATE LIMITING ====================
+builder.Services.AddRateLimiter(options =>
+{
+    // Política global (fallback)
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+        httpContext =>
+        {
+            // Usa UserId para autenticados, IP para anônimos
+            string clientId = httpContext.User.Identity?.IsAuthenticated == true
+                ? httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "user"
+                : httpContext.Connection.RemoteIpAddress?.ToString() ?? "ip";
+
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: clientId,
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                });
+        });
+
+    // Políticas nomeadas para diferentes tipos de endpoint
+    options.AddFixedWindowLimiter("public", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 10;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("authenticated", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 100;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("admin", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 200;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("sensitive", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+
+    // Personalizar resposta quando o limite é atingido
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers["Retry-After"] = "60";
+
+        // Versão corrigida - sem usar MetadataName
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            error = "Muitas requisições. Por favor, aguarde um momento.",
+            retryAfterSeconds = 60
+        }, cancellationToken);
+    };
+});
+
 var app = builder.Build();
 
 // INICIALIZADOR DO BANCO
@@ -159,8 +232,10 @@ else
 
 // ORDEM CORRETA DOS MIDDLEWARES
 app.UseCors("AllowAngularApp");
+app.UseRateLimiter(); // Rate limiting ANTES da autenticação
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<CustomRateLimitingMiddleware>(); // Nosso middleware customizado
 
 app.MapControllers();
 

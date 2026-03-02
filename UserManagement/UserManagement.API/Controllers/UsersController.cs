@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using UserManagement.API.Attributes;
 using UserManagement.Application.DTOs;
 using UserManagement.Application.Services;
 using UserManagement.Domain.Enums;
@@ -25,6 +27,7 @@ namespace UserManagement.API.Controllers
 
         [HttpGet("paginator")]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("admin")] // 200 req/min
         public async Task<IActionResult> GetAllPaginator([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
@@ -58,6 +61,7 @@ namespace UserManagement.API.Controllers
 
         [HttpGet("statistics")]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("admin")] // 200 req/min
         public async Task<IActionResult> GetStatistics()
         {
             try
@@ -92,6 +96,7 @@ namespace UserManagement.API.Controllers
 
         [HttpPost("{id}/promote")]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("sensitive")] // 5 req/min - operação sensível
         public async Task<IActionResult> PromoteToAdmin(Guid id)
         {
             try
@@ -127,6 +132,7 @@ namespace UserManagement.API.Controllers
 
         [HttpPost("{id}/demote")]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("sensitive")] // 5 req/min - operação sensível
         public async Task<IActionResult> DemoteToUser(Guid id)
         {
             try
@@ -162,6 +168,7 @@ namespace UserManagement.API.Controllers
 
         [HttpPatch("{id}/status")]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("admin")] // 200 req/min
         public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeStatusDto changeStatusDto)
         {
             try
@@ -187,6 +194,7 @@ namespace UserManagement.API.Controllers
         // ==================== 3. ROTAS COM ID (/{id}) ====================
 
         [HttpGet("{id}")]
+        [EnableRateLimiting("authenticated")] // 100 req/min
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -215,6 +223,7 @@ namespace UserManagement.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [EnableRateLimiting("authenticated")] // 100 req/min
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto updateUserDto)
         {
             try
@@ -248,6 +257,7 @@ namespace UserManagement.API.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("sensitive")] // 5 req/min - operação sensível
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -272,6 +282,7 @@ namespace UserManagement.API.Controllers
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
+        [EnableRateLimiting("admin")] // 200 req/min
         public async Task<IActionResult> GetAll()
         {
             Console.WriteLine("=== BUSCAR TODOS OS USUÁRIOS ===");
@@ -281,6 +292,7 @@ namespace UserManagement.API.Controllers
 
         [HttpPost]
         [AllowAnonymous]
+        [EnableRateLimiting("public")] // 10 req/min - público
         public async Task<IActionResult> Create([FromBody] CreateUserDto createUserDto)
         {
             try
