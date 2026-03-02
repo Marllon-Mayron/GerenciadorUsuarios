@@ -21,200 +21,11 @@ namespace UserManagement.API.Controllers
             _userService = userService;
         }
 
-        // Apenas ADMIN pode ver todos os usuários
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetAll()
-        {
-            var users = await _userService.GetAllAsync();
-            return Ok(users);
-        }
-
-        // ADMIN vê qualquer usuário, USER vê apenas o próprio perfil
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            try
-            {
-                var currentUserId = GetCurrentUserId();
-                var isAdmin = User.HasClaim(c => c.Type == "Role" && c.Value == UserRole.Admin.ToString());
-
-                // Se não for admin, só pode ver o próprio perfil
-                if (!isAdmin && currentUserId != id)
-                    return Forbid();
-
-                var user = await _userService.GetByIdAsync(id);
-                if (user == null)
-                    return NotFound(new { message = "Usuário não encontrado" });
-
-                return Ok(user);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> Create([FromBody] CreateUserDto createUserDto)
-        {
-            try
-            {
-                var user = await _userService.CreateAsync(createUserDto);
-                return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        // ADMIN pode atualizar qualquer usuário, USER apenas o próprio
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto updateUserDto)
-        {
-            try
-            {
-                var currentUserId = GetCurrentUserId();
-                var isAdmin = User.IsInRole("Admin");
-
-                if (!isAdmin && currentUserId != id)
-                    return Forbid();
-
-                var user = await _userService.UpdateAsync(id, updateUserDto);
-                return Ok(user);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new { message = "Usuário não encontrado" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        // Deletar usuários
-        [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                var result = await _userService.DeleteAsync(id);
-                if (!result)
-                    return NotFound(new { message = "Usuário não encontrado" });
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        // Metodo para mudar status
-        [HttpPatch("{id}/status")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeStatusDto changeStatusDto)
-        {
-            try
-            {
-                var user = await _userService.ChangeStatusAsync(id, changeStatusDto.Activate);
-                return Ok(user);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new { message = "Usuário não encontrado" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        //Promover usuários
-        [HttpPost("{id}/promote")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> PromoteToAdmin(Guid id)
-        {
-            try
-            {
-                var adminUserId = GetCurrentUserId();
-                var user = await _userService.PromoteToAdminAsync(id, adminUserId);
-                return Ok(user);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Forbid();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        // Método para rebaixar admins
-        [HttpPost("{id}/demote")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DemoteToUser(Guid id)
-        {
-            try
-            {
-                var adminUserId = GetCurrentUserId();
-                var user = await _userService.DemoteToUserAsync(id, adminUserId);
-                return Ok(user);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Forbid();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        // Método auxiliar para pegar ID do usuário atual
-        private Guid GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
-                throw new UnauthorizedAccessException("Usuário não autenticado");
-
-            return Guid.Parse(userIdClaim);
-        }
-
-        //PAGinator
+        // ==================== 1. ROTAS FIXAS (SEM PARÂMETROS) ====================
 
         [HttpGet("paginator")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllPaginator([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -239,7 +50,7 @@ namespace UserManagement.API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERRO no GetAll: {ex.Message}");
+                Console.WriteLine($"ERRO no GetAllPaginator: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "Erro interno ao processar a requisição", details = ex.Message });
             }
@@ -275,6 +86,231 @@ namespace UserManagement.API.Controllers
                     error = ex.Message
                 });
             }
+        }
+
+        // ==================== 2. ROTAS COM SUB-ROTAS (/{id}/ação) ====================
+
+        [HttpPost("{id}/promote")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> PromoteToAdmin(Guid id)
+        {
+            try
+            {
+                Console.WriteLine($"=== PROMOVER PARA ADMIN ===");
+                Console.WriteLine($"ID do usuário alvo: {id}");
+
+                var adminUserId = GetCurrentUserId();
+                Console.WriteLine($"ID do admin: {adminUserId}");
+
+                var user = await _userService.PromoteToAdminAsync(id, adminUserId);
+                return Ok(user);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"Unauthorized: {ex.Message}");
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro inesperado: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/demote")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> DemoteToUser(Guid id)
+        {
+            try
+            {
+                Console.WriteLine($"=== REBAIXAR PARA USER ===");
+                Console.WriteLine($"ID do usuário alvo: {id}");
+
+                var adminUserId = GetCurrentUserId();
+                Console.WriteLine($"ID do admin: {adminUserId}");
+
+                var user = await _userService.DemoteToUserAsync(id, adminUserId);
+                return Ok(user);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"Unauthorized: {ex.Message}");
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro inesperado: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPatch("{id}/status")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeStatusDto changeStatusDto)
+        {
+            try
+            {
+                Console.WriteLine($"=== MUDAR STATUS ===");
+                Console.WriteLine($"ID do usuário: {id}");
+                Console.WriteLine($"Ativar: {changeStatusDto.Activate}");
+
+                var user = await _userService.ChangeStatusAsync(id, changeStatusDto.Activate);
+                return Ok(user);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Usuário não encontrado" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // ==================== 3. ROTAS COM ID (/{id}) ====================
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                Console.WriteLine($"=== BUSCAR USUÁRIO POR ID ===");
+                Console.WriteLine($"ID: {id}");
+
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = User.HasClaim(c => c.Type == "Role" && c.Value == UserRole.Admin.ToString());
+
+                // Se não for admin, só pode ver o próprio perfil
+                if (!isAdmin && currentUserId != id)
+                    return Forbid();
+
+                var user = await _userService.GetByIdAsync(id);
+                if (user == null)
+                    return NotFound(new { message = "Usuário não encontrado" });
+
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto updateUserDto)
+        {
+            try
+            {
+                Console.WriteLine($"=== ATUALIZAR USUÁRIO ===");
+                Console.WriteLine($"ID: {id}");
+
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = User.IsInRole("Admin");
+
+                if (!isAdmin && currentUserId != id)
+                    return Forbid();
+
+                var user = await _userService.UpdateAsync(id, updateUserDto);
+                return Ok(user);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Usuário não encontrado" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            try
+            {
+                Console.WriteLine($"=== DELETAR USUÁRIO ===");
+                Console.WriteLine($"ID: {id}");
+
+                var result = await _userService.DeleteAsync(id);
+                if (!result)
+                    return NotFound(new { message = "Usuário não encontrado" });
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // ==================== 4. ROTAS BASE (SEM PARÂMETROS ADICIONAIS) ====================
+
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> GetAll()
+        {
+            Console.WriteLine("=== BUSCAR TODOS OS USUÁRIOS ===");
+            var users = await _userService.GetAllAsync();
+            return Ok(users);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Create([FromBody] CreateUserDto createUserDto)
+        {
+            try
+            {
+                Console.WriteLine("=== CRIAR NOVO USUÁRIO ===");
+                Console.WriteLine($"Email: {createUserDto.Email}");
+
+                var user = await _userService.CreateAsync(createUserDto);
+                return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // ==================== 5. MÉTODOS AUXILIARES ====================
+
+        private Guid GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                throw new UnauthorizedAccessException("Usuário não autenticado");
+
+            return Guid.Parse(userIdClaim);
         }
     }
 }
