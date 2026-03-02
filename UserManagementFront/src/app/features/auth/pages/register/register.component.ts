@@ -2,7 +2,7 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
-
+import { ToastService } from '../../../../shared/services/toast.service';
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -12,15 +12,14 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class RegisterComponent implements OnInit {
   @Output() registrationSuccess = new EventEmitter<void>();
   @Output() switchToLoginMode = new EventEmitter<void>();
-  
+
   registerForm!: FormGroup;
   isLoading = false;
-  message = '';
-  messageType: 'success' | 'error' = 'error';
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -39,30 +38,27 @@ export class RegisterComponent implements OnInit {
     }
 
     if (this.registerForm.value.password !== this.registerForm.value.confirmPassword) {
-      this.message = 'As senhas não coincidem';
-      this.messageType = 'error';
+      this.toastService.error('As senhas não coincidem');
       return;
     }
 
     this.isLoading = true;
-    this.message = '';
-    
+
     const { confirmPassword, ...userData } = this.registerForm.value;
 
     this.authService.register(userData).subscribe({
       next: () => {
         this.isLoading = false;
-        this.message = 'Cadastro realizado com sucesso!';
-        this.messageType = 'success';
-        
+        this.toastService.success('Cadastro realizado com sucesso!');
+
         setTimeout(() => {
           this.registrationSuccess.emit();
         }, 2000);
       },
       error: (error) => {
         this.isLoading = false;
-        this.message = error.error?.message || 'Erro ao fazer cadastro';
-        this.messageType = 'error';
+        const errorMessage = error.error?.message || 'Erro ao fazer cadastro';
+        this.toastService.error(errorMessage);
       }
     });
   }
@@ -74,7 +70,7 @@ export class RegisterComponent implements OnInit {
   private showErrors(): void {
     const controls = this.registerForm.controls;
     let message = '';
-    
+
     if (controls['name'].errors?.['required']) message = 'Nome é obrigatório';
     else if (controls['name'].errors?.['minlength']) message = 'Nome deve ter 3+ caracteres';
     else if (controls['email'].errors?.['required']) message = 'E-mail é obrigatório';
@@ -82,10 +78,9 @@ export class RegisterComponent implements OnInit {
     else if (controls['password'].errors?.['required']) message = 'Senha é obrigatória';
     else if (controls['password'].errors?.['minlength']) message = 'Senha deve ter 6+ caracteres';
     else if (controls['confirmPassword'].errors?.['required']) message = 'Confirme sua senha';
-    
+
     if (message) {
-      this.message = message;
-      this.messageType = 'error';
+      this.toastService.error(message);
     }
   }
 }

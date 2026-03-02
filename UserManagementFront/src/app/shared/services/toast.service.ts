@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 
 export interface Toast {
-  message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
   id: number;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration?: number;
 }
 
 @Injectable({
@@ -11,20 +12,45 @@ export interface Toast {
 })
 export class ToastService {
   private toasts: Toast[] = [];
-  private nextId = 0;
+  private nextId = 1;
 
-  show(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info'): void {
-    const id = this.nextId++;
-    this.toasts.push({ message, type, id });
-    
-    setTimeout(() => this.remove(id), 5000);
+  getToasts() {
+    return this.toasts;
   }
 
-  remove(id: number): void {
+  show(message: string, type: Toast['type'] = 'info', duration: number = 3000) {
+    const id = this.nextId++;
+    const toast: Toast = { id, message, type, duration };
+    this.toasts.push(toast);
+
+    if (duration > 0) {
+      setTimeout(() => this.remove(id), duration);
+    }
+
+    return id;
+  }
+
+  success(message: string, duration?: number) {
+    return this.show(message, 'success', duration);
+  }
+
+  error(message: string, duration?: number) {
+    return this.show(message, 'error', duration);
+  }
+
+  warning(message: string, duration?: number) {
+    return this.show(message, 'warning', duration);
+  }
+
+  info(message: string, duration?: number) {
+    return this.show(message, 'info', duration);
+  }
+
+  remove(id: number) {
     this.toasts = this.toasts.filter(t => t.id !== id);
   }
 
-  getToasts(): Toast[] {
-    return this.toasts;
+  clear() {
+    this.toasts = [];
   }
 }

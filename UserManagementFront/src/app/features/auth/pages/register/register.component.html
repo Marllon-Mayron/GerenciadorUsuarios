@@ -10,7 +10,6 @@
     />
   </div>
 
-
   <div class="mb-5">
     <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">E-mail</label>
     <input
@@ -43,18 +42,6 @@
     </div>
   </div>
 
-  @if (message) {
-    <div class="mb-5 p-3 text-sm border" 
-         [class.bg-gray-900]="messageType === 'success'" 
-         [class.text-gray-300]="messageType === 'success'"
-         [class.border-gray-700]="messageType === 'success'"
-         [class.bg-gray-900]="messageType === 'error'" 
-         [class.text-gray-300]="messageType === 'error'"
-         [class.border-gray-700]="messageType === 'error'">
-      {{ message }}
-    </div>
-  }
-
   <button
     type="submit"
     [disabled]="isLoading"
@@ -64,10 +51,10 @@
   </button>
 
   <p class="text-center mt-4 text-xs text-gray-600">
-    Já tem uma conta? 
-    <button 
+    Já tem uma conta?
+    <button
       type="button"
-      (click)="switchToLogin()" 
+      (click)="switchToLogin()"
       class="text-white hover:text-gray-300 transition-colors ml-1 bg-transparent border-0 p-0 underline-offset-2 hover:underline cursor-pointer"
     >
       Faça login
