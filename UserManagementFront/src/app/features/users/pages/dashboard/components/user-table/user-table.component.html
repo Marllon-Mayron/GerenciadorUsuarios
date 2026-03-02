@@ -135,13 +135,7 @@
             </div>
           </div>
 
-          @if (editMessage) {
-            <div class="mb-4 p-3 text-sm border border-gray-700 bg-gray-900 text-gray-300">
-              {{ editMessage }}
-            </div>
-          }
-
-          @if (!hasChanges && !editMessage) {
+          @if (!hasChanges) {
             <div class="mb-4 text-xs text-gray-600 text-center">
               Nenhuma alteração para salvar
             </div>
@@ -205,12 +199,6 @@
             </p>
           </div>
         </div>
-
-        @if (deleteMessage) {
-          <div class="mb-4 p-3 text-sm border border-gray-700 bg-gray-900 text-gray-300">
-            {{ deleteMessage }}
-          </div>
-        }
 
         <div class="flex gap-4">
           <button

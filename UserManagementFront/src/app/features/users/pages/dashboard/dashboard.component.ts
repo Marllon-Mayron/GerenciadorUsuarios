@@ -8,6 +8,8 @@ import { UserChartsComponent } from './components/user-charts/user-charts.compon
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { UserService } from '../../../../core/services/user.service';
 import { PaginatedResponse } from '../../../../shared/models/dtos/paginated-response.dto';
+import { ToastService } from '../../../../shared/services/toast.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -42,7 +44,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     public userService: UserService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -69,6 +72,7 @@ export class DashboardComponent implements OnInit {
         this.isLoading = false;
 
         if (error.status === 403) {
+          this.toastService.error('Acesso negado. Redirecionando...');
           this.router.navigate(['/user-info']);
         }
       }
@@ -95,6 +99,7 @@ export class DashboardComponent implements OnInit {
         console.error('Erro ao carregar estatísticas:', error);
         this.chartsError = 'Erro ao carregar estatísticas';
         this.chartsLoading = false;
+        this.toastService.error('Erro ao carregar estatísticas');
       }
     });
   }

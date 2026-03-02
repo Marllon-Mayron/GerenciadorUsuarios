@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { UserDto } from '../../../../../../shared/models/dtos/user-dto.dto';
 import { UpdateUserDto } from '../../../../../../shared/models/dtos/update-user-dto.dto';
 import { UserService } from '../../../../../../core/services/user.service';
+import { ToastService } from '../../../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-user-table',
@@ -21,7 +22,6 @@ export class UserTableComponent {
   selectedUser: UserDto | null = null;
   editForm!: FormGroup;
   isSaving = false;
-  editMessage = '';
   hasChanges = false;
   isChangingStatus = false;
   isChangingRole = false;
@@ -29,11 +29,11 @@ export class UserTableComponent {
   // Modal de exclusão
   showDeleteModal = false;
   isDeleting = false;
-  deleteMessage = '';
 
   constructor(
     private userService: UserService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private toastService: ToastService
   ) {
     this.initForm();
   }
@@ -79,7 +79,6 @@ export class UserTableComponent {
       role: user.role
     });
     this.showEditModal = true;
-    this.editMessage = '';
     this.hasChanges = false;
     this.isChangingStatus = false;
     this.isChangingRole = false;
@@ -88,7 +87,6 @@ export class UserTableComponent {
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedUser = null;
-    this.editMessage = '';
     this.hasChanges = false;
     this.isChangingStatus = false;
     this.isChangingRole = false;
@@ -98,7 +96,6 @@ export class UserTableComponent {
     if (this.editForm.invalid || !this.selectedUser || !this.hasChanges) return;
 
     this.isSaving = true;
-    this.editMessage = '';
 
     const currentValues = this.editForm.value;
     const originalStatus = this.selectedUser.status === 'Ativo';
@@ -156,56 +153,51 @@ export class UserTableComponent {
             this.userUpdated.emit(user);
           });
         }
+        this.toastService.success('Usuário atualizado com sucesso!');
       })
       .catch((error) => {
         this.isSaving = false;
         this.isChangingStatus = false;
         this.isChangingRole = false;
-        this.editMessage = error.error?.message || 'Erro ao atualizar usuário';
+        this.toastService.error(error.error?.message || 'Erro ao atualizar usuário');
       });
   }
 
   openDeleteModal(user: UserDto): void {
     this.selectedUser = user;
     this.showDeleteModal = true;
-    this.deleteMessage = '';
   }
 
   closeDeleteModal(): void {
     this.showDeleteModal = false;
     this.selectedUser = null;
-    this.deleteMessage = '';
   }
 
   deleteUser(): void {
-  if (!this.selectedUser) {
-    return;
-  }
-
-  // Guarda o ID antes de qualquer operação
-  const userIdToDelete = this.selectedUser.id;
-  const userName = this.selectedUser.name;
-
-  this.isDeleting = true;
-  this.deleteMessage = '';
-
-  this.userService.deleteUser(userIdToDelete).subscribe({
-    next: () => {
-
-      this.userDeleted.emit(userIdToDelete);
-
-      this.isDeleting = false;
-      this.deleteMessage = '';
-
-      this.showDeleteModal = false;
-      this.selectedUser = null;
-    },
-    error: (error) => {
-      this.isDeleting = false;
-      this.deleteMessage = error.error?.message || 'Erro ao excluir usuário';
+    if (!this.selectedUser) {
+      return;
     }
-  });
-}
+
+    // Guarda o ID antes de qualquer operação
+    const userIdToDelete = this.selectedUser.id;
+    const userName = this.selectedUser.name;
+
+    this.isDeleting = true;
+
+    this.userService.deleteUser(userIdToDelete).subscribe({
+      next: () => {
+        this.userDeleted.emit(userIdToDelete);
+        this.isDeleting = false;
+        this.showDeleteModal = false;
+        this.selectedUser = null;
+        this.toastService.success('Usuário excluído com sucesso!');
+      },
+      error: (error) => {
+        this.isDeleting = false;
+        this.toastService.error(error.error?.message || 'Erro ao excluir usuário');
+      }
+    });
+  }
 
   getUserInitials(name: string): string {
     if (!name) return 'U';

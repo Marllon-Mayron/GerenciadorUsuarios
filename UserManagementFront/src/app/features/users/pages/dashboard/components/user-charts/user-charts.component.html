@@ -15,7 +15,6 @@
       <div class="text-center py-8 text-red-400">{{ errorMessage }}</div>
     } @else if (statistics) {
       <div class="p-6">
-        <!-- Container maior para o gráfico com legendas -->
         <div style="height: 300px; width: 100%; position: relative;">
           <ngx-charts-pie-chart
             [results]="statusChartData"
@@ -63,7 +62,6 @@
       <div class="text-center py-8 text-red-400">{{ errorMessage }}</div>
     } @else if (statistics) {
       <div class="p-6">
-        <!-- Container maior para o gráfico com legendas -->
         <div style="height: 300px; width: 100%; position: relative;">
           <ngx-charts-pie-chart
             [results]="roleChartData"
